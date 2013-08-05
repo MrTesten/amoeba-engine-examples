@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="custom_rules">
-	<property name="root.dir" value="../.." />
-	<property name="enginedeploy.dir" value="${root.dir}/AmoebaEngine/deploy" />
 	<property name="engine.lib" value="AmoebaEngine.jar" />
 	<property name="package.name" value="org.amoeba.examples.transitionsexample" />
 	<property name="activity" value=".SplashScreen" />
