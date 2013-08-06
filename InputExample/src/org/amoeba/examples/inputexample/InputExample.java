@@ -33,7 +33,7 @@ public class InputExample extends GameActivity
 
         information = new ArrayList<TextSprite>();
 
-        TextOptions informationOptions = new TextOptions(12, Color.WHITE, Align.CENTER, Typeface.DEFAULT, true);
+        TextOptions informationOptions = new TextOptions(24, Color.BLACK, Align.CENTER, Typeface.DEFAULT, true);
         information.add(getGraphicsService().getTextFactory().createTextSprite(
             "Touch the screen to see data", informationOptions));
         information.add(getGraphicsService().getTextFactory().createTextSprite(
@@ -41,29 +41,28 @@ public class InputExample extends GameActivity
         information.add(getGraphicsService().getTextFactory().createTextSprite(
             "key to exit the application.", informationOptions));
 
-        TextOptions eventListOptions = new TextOptions(48, Color.WHITE, Align.CENTER, Typeface.DEFAULT, true);
+        TextOptions eventListOptions = new TextOptions(36, Color.BLACK, Align.CENTER, Typeface.DEFAULT, true);
         eventList = getGraphicsService().getTextFactory().createTextSprite("Some Event", eventListOptions);
     }
 
     @Override
     public void onSurfaceChanged(final int width, final int height)
     {
+        GLES20.glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+
         int informationSpriteHeight = 10;
         for (TextSprite informationText : information) {
             informationText.setPosition(width/2, informationSpriteHeight);
-            informationSpriteHeight += 12;
+            informationSpriteHeight += informationText.getHeight();
         }
         
-        eventList.setPosition(width/2, 60);
-        eventList.setWidth(40);
-        eventList.setHeight(40);
+        eventList.setPosition(width/2, height/4);
     }
 
     @Override
     public void onDraw(final Camera camera)
     {
         super.onDraw(camera);
-        GLES20.glClearColor(0.0f, 0.0f, 1.0f, 1f);
     }
 
     @Override
@@ -77,5 +76,5 @@ public class InputExample extends GameActivity
         MediaPlayer smbCoinSound = MediaPlayer.create(this, R.raw.smw_coin);
         smbCoinSound.start();
     }
-
+    
 }
