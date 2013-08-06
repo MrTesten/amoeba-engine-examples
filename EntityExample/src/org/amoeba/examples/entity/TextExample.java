@@ -1,5 +1,8 @@
 package org.amoeba.examples.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.amoeba.activity.GameActivity;
 import org.amoeba.entity.sprite.TextSprite;
 import org.amoeba.graphics.texture.TextOptions;
@@ -8,32 +11,33 @@ import android.graphics.Color;
 import android.graphics.Paint.Align;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.os.SystemClock;
 
 public class TextExample extends GameActivity
 {
-	private TextSprite text;
+	private List<TextSprite> textSprites;
+	private final static int[] textSizes = {12, 14, 16, 18, 22, 24, 26, 28, 32, 48, 64, 128};
 
 	@Override
 	public void onCreate(final Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		TextOptions options = new TextOptions(64, Color.BLUE, Align.CENTER, Typeface.DEFAULT, true);
-		text = getGraphicsService().getTextFactory().createTextSprite("Hello!", options);
+
+		textSprites = new ArrayList<TextSprite>();
+		for (int textSize : textSizes)
+		{
+			TextOptions options = new TextOptions(textSize, Color.BLUE, Align.CENTER, Typeface.DEFAULT, true);
+			textSprites.add(getGraphicsService().getTextFactory().createTextSprite("Text size: " + textSize, options));
+		}
 	}
 
 	@Override
 	public void onSurfaceChanged(final int width, final int height)
 	{
-		text.setPosition(width / 2, height / 2);
-	}
-
-	@Override
-	public void onUpdate()
-	{
-		long time = SystemClock.uptimeMillis() % 10000L;
-		float angleInDegrees = (360.0f / 10000.0f) * ((int) time);
-
-		text.setRotation(angleInDegrees);
+		float yPosition = 0.0f;
+		for (TextSprite text : textSprites)
+		{
+			text.setPosition(width / 2, yPosition);
+			yPosition += text.getHeight();
+		}
 	}
 }
