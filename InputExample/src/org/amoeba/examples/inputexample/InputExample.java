@@ -2,6 +2,7 @@ package org.amoeba.examples.inputexample;
 
 import org.amoeba.activity.GameActivity;
 import org.amoeba.engine.service.input.InputEvent;
+import org.amoeba.entity.shape.Rectangle2D;
 import org.amoeba.entity.sprite.TextSprite;
 import org.amoeba.graphics.camera.Camera;
 import org.amoeba.graphics.texture.TextOptions;
@@ -17,19 +18,20 @@ import android.util.Log;
 import android.view.MotionEvent;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 public class InputExample extends GameActivity
 {
 	private static final String TAG = "AmoebaEngine.InputExample";
 
+    private static final int EVENT_LIST_SIZE = 39;
+    private static final int POINT_SIZE = 10;
+    private int eventCount = 0;
+
     private List<TextSprite> information;
-    private Queue<TextSprite> eventList;
+    private List<TextSprite> eventTypeList;
+    private List<Rectangle2D> eventPositionList;
     private TextOptions eventListOptions;
-    private int screenWidth = 0;
-    private int screenHeight = 0;
 
     private TextSprite newEvent = null;
 
@@ -39,9 +41,10 @@ public class InputExample extends GameActivity
         super.onCreate(savedInstanceState);
 
         information = new ArrayList<TextSprite>();
-        eventList = new LinkedList<TextSprite>();
+        eventTypeList = new ArrayList<TextSprite>();
+        eventPositionList = new ArrayList<Rectangle2D>();
 
-        TextOptions informationOptions = new TextOptions(32, Color.BLACK, Align.CENTER, Typeface.DEFAULT, true);
+        TextOptions informationOptions = new TextOptions(24, Color.BLACK, Align.RIGHT, Typeface.DEFAULT, true);
         information.add(getGraphicsService().getTextFactory().createTextSprite(
             "Touch the screen to see data", informationOptions));
         information.add(getGraphicsService().getTextFactory().createTextSprite(
@@ -50,9 +53,13 @@ public class InputExample extends GameActivity
             "key to exit the application.", informationOptions));
 
         eventListOptions = new TextOptions(24, Color.BLACK, Align.CENTER, Typeface.DEFAULT, true);
-
-        //newEvent = getGraphicsService().getTextFactory().createTextSprite(
-        //    "testing", eventListOptions);
+        //Prepopulate the event lists
+        for (int count = 0; count < EVENT_LIST_SIZE; ++count) {
+            eventTypeList.add(getGraphicsService().getTextFactory().createTextSprite(" " + count, eventListOptions));
+            Rectangle2D rectangle = getGraphicsService().getShapeFactory().createRectangle(POINT_SIZE, POINT_SIZE);
+            rectangle.setColor(Color.BLACK);
+            eventPositionList.add(rectangle);
+        }
     }
 
     @Override
@@ -62,12 +69,16 @@ public class InputExample extends GameActivity
 
         int informationSpriteHeight = 20;
         for (TextSprite informationText : information) {
-            informationText.setPosition(width/2, informationSpriteHeight);
-            informationSpriteHeight += informationText.getHeight();
+            informationText.setPosition(width*3/5, informationText.getHeight() * information.indexOf(informationText)*3/4 + informationSpriteHeight);
         }
-        
-        screenWidth = width;
-        screenHeight = height;
+
+        for (TextSprite event : eventTypeList) {
+            event.setPosition(width/5, event.getHeight()/2 + event.getHeight() * eventTypeList.indexOf(event));
+        }
+
+        for (Rectangle2D point : eventPositionList) {
+            point.setPosition(width - POINT_SIZE, height - POINT_SIZE);
+        }
     }
 
     @Override
@@ -79,28 +90,30 @@ public class InputExample extends GameActivity
     @Override
 	public void onInputEvent(final InputEvent event)
 	{
-        MediaPlayer smbCoinSound = MediaPlayer.create(this, R.raw.smw_coin);
-        smbCoinSound.start();
+        //Shift the text values downwards (upwards?).
+        for (TextSprite printableEvent : eventTypeList) {
+            if (!((eventTypeList.indexOf(printableEvent) + 1) >= EVENT_LIST_SIZE)) {
+                printableEvent.setText(eventTypeList.get(eventTypeList.indexOf(printableEvent) + 1).getText());
+            }
+        }
 
-        //If we hit our max size of event items to show, remove the top item.
-        //if (eventList.size() > 15) {
-        //    eventList.poll();    
-        //}
+        eventTypeList.get(EVENT_LIST_SIZE - 1).setText(event.getEventType().toString());
 
-        //Add the new event to the end of the queue. Initialize position to the top of the drawning area,
-        //MINUS what we are about to adjust manually by shifting the entire queue.
-        //TextSprite newEvent = getGraphicsService().getTextFactory().createTextSprite(
-        //    event.getEventType().toString(), eventListOptions);
-        newEvent = getGraphicsService().getTextFactory().createTextSprite(
-            "test", eventListOptions);
-        //newEvent.setPosition(screenWidth/2, screenHeight/4 - newEvent.getHeight());
-        //eventList.add(newEvent);
-
-        //Shift the entire queue downwards.
-       // for (TextSprite queuedEvent : eventList) {
-            //queuedEvent.setPosition(queuedEvent.getPosition().getX(),
-            //    queuedEvent.getPosition().getY() + queuedEvent.getHeight());
-        //}
+        //Increment event counter to cycle through points to adjust.
+        if (event.getEventType() == InputEvent.EventType.DOWN ||
+            event.getEventType() == InputEvent.EventType.LONGPRESS ||
+            event.getEventType() == InputEvent.EventType.SHOWPRESS ||
+            event.getEventType() == InputEvent.EventType.SINGLETAP) {
+            eventPositionList.get(eventCount % EVENT_LIST_SIZE).setPosition(
+                event.getMotionEvent().getX(), event.getMotionEvent().getY());
+            ++eventCount;
+        }
+        else if (event.getEventType() == InputEvent.EventType.FLING ||
+            event.getEventType() == InputEvent.EventType.SCROLL) {
+            eventPositionList.get(eventCount % EVENT_LIST_SIZE).setPosition(
+                event.getEndingEvent().getX(), event.getEndingEvent().getY());
+            ++eventCount;
+        }
 	}
 
     @Override
