@@ -278,13 +278,19 @@ public class InputExample extends GameActivity implements SensorEventListener
     @Override
     public void onResume() {
         super.onResume();
-        sensorManager.registerListener(this, rotationSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        if (rotationSensor != null)
+        {
+            sensorManager.registerListener(this, rotationSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
     }
 
     @Override
     public void onPause()
     {
         super.onPause();
-        sensorManager.unregisterListener(this);
+        if (rotationSensor != null)
+        {
+            sensorManager.unregisterListener(this);
+        }
     }
 }
