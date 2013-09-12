@@ -42,6 +42,7 @@ public class InputExample extends GameActivity implements SensorEventListener
     private List<TextSprite> eventTypeList;
     private TextSprite eventDetailsLine1;
     private TextSprite eventDetailsLine2;
+    private DecimalFormat eventDetailsFormat;
     private List<Rectangle2D> eventPositionList;
     private TextOptions eventListOptions;
 
@@ -51,6 +52,9 @@ public class InputExample extends GameActivity implements SensorEventListener
     private Sensor rotationSensor;
     private List<TextSprite> rotationDetails;
     private Rectangle2D rotationPosition;
+    private float[] orientation;
+    private float[] rotationMatrix;
+    private DecimalFormat rotationDetailsFormat;
 
     @Override
     public void onCreate(final Bundle savedInstanceState)
@@ -61,6 +65,12 @@ public class InputExample extends GameActivity implements SensorEventListener
         eventTypeList = new ArrayList<TextSprite>();
         eventPositionList = new ArrayList<Rectangle2D>();
         rotationDetails = new ArrayList<TextSprite>();
+
+        orientation = new float[3];
+        rotationMatrix = new float[16];
+
+        eventDetailsFormat = new DecimalFormat("0000.00");
+        rotationDetailsFormat = new DecimalFormat("000");
 
         TextOptions informationOptions = new TextOptions(24, Color.BLACK, Align.RIGHT, Typeface.DEFAULT, true);
         information.add(getGraphicsService().getTextFactory().createTextSprite(
@@ -140,12 +150,6 @@ public class InputExample extends GameActivity implements SensorEventListener
     }
 
     @Override
-    public void onDraw(final Camera camera)
-    {
-        super.onDraw(camera);
-    }
-
-    @Override
 	public void onInputEvent(final InputEvent event)
 	{
         //Shift the text values downwards (upwards?).
@@ -168,8 +172,8 @@ public class InputExample extends GameActivity implements SensorEventListener
                 event.getMotionEvent().getX(), event.getMotionEvent().getY());
 
             //Update the details with the current event informaton.
-            eventDetailsLine1.setText("X: " + new DecimalFormat("#.##").format(event.getMotionEvent().getX()));
-            eventDetailsLine2.setText("Y: " + new DecimalFormat("#.##").format(event.getMotionEvent().getY()));
+            eventDetailsLine1.setText("X: " + eventDetailsFormat.format(event.getMotionEvent().getX()));
+            eventDetailsLine2.setText("Y: " + eventDetailsFormat.format(event.getMotionEvent().getY()));
 
             ++eventCount;
         }
@@ -180,8 +184,8 @@ public class InputExample extends GameActivity implements SensorEventListener
                 event.getEndingEvent().getX(), event.getEndingEvent().getY());
 
             //Update the details with the current event informaton.
-            eventDetailsLine1.setText("X: " + new DecimalFormat("#.##").format(event.getEndingEvent().getX()));
-            eventDetailsLine2.setText("Y: " + new DecimalFormat("#.##").format(event.getEndingEvent().getY()));
+            eventDetailsLine1.setText("X: " + eventDetailsFormat.format(event.getEndingEvent().getX()));
+            eventDetailsLine2.setText("Y: " + eventDetailsFormat.format(event.getEndingEvent().getY()));
 
             ++eventCount;
         }
@@ -205,16 +209,14 @@ public class InputExample extends GameActivity implements SensorEventListener
     {
         if (sensorEvent.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR)
         {
-            float[] orientation = new float[3];
-            float[] rotationMatrix = new float[16];
             SensorManager.getRotationMatrixFromVector(rotationMatrix, sensorEvent.values);
             SensorManager.getOrientation(rotationMatrix, orientation);
 
             convertOrientationRadiansToDegrees(orientation);
 
-            rotationDetails.get(0).setText("Azimuth (Z): " + new DecimalFormat("#").format(orientation[0]));
-            rotationDetails.get(1).setText("Pitch (X): " + new DecimalFormat("#").format(orientation[1]));
-            rotationDetails.get(2).setText("Roll (Y): " + new DecimalFormat("#").format(orientation[2]));
+            rotationDetails.get(0).setText("Azimuth (Z): " + rotationDetailsFormat.format(orientation[0]));
+            rotationDetails.get(1).setText("Pitch (X): " + rotationDetailsFormat.format(orientation[1]));
+            rotationDetails.get(2).setText("Roll (Y): " + rotationDetailsFormat.format(orientation[2]));
 
             interpretOrientation(orientation);
             adjustRotationPosition(orientation);
@@ -266,10 +268,10 @@ public class InputExample extends GameActivity implements SensorEventListener
 
     private void adjustRotationPosition(final float[] orientation)
     {
-        float newX = rotationPosition.getPosition().getX() + orientation[2];
+        float newX = rotationPosition.getPosition().getX() + orientation[2]/2f;
         newX = Math.min(screenWidth, Math.max(0, newX));
 
-        float newY = rotationPosition.getPosition().getY() - orientation[1];
+        float newY = rotationPosition.getPosition().getY() - orientation[1]/2f;
         newY = Math.min(screenHeight, Math.max(0, newY));
 
         rotationPosition.setPosition(newX, newY);
@@ -280,7 +282,7 @@ public class InputExample extends GameActivity implements SensorEventListener
         super.onResume();
         if (rotationSensor != null)
         {
-            sensorManager.registerListener(this, rotationSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            sensorManager.registerListener(this, rotationSensor, SensorManager.SENSOR_DELAY_FASTEST);
         }
     }
 
